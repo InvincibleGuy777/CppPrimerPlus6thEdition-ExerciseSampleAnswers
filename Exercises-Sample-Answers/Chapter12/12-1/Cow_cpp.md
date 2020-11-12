@@ -1,7 +1,8 @@
 ```cpp
 /*
     content: Chapter 12 Coding Exercise Solution 12-1 Cow.cpp function definition
-    date: 2020-11-12
+    date-created: 2020-11-12
+    date-updated: 2020-11-12
     Editor: VS Code 
     Compiler: g++
     Debugger: gdb
