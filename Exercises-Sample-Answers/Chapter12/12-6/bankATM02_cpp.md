@@ -1,6 +1,6 @@
 ```cpp
 /*
-    content: Chapter 12 Coding Exercise Solution 12-5 bankATM.cpp
+    content: Chapter 12 Coding Exercise Solution 12-6 bankATM02.cpp
     date-created: 2020-11-16
     date-updated: 2020-11-16
     Editor: VS Code 
@@ -13,19 +13,24 @@
     csdn blog url: https://me.csdn.net/weixin_42430021
 */
 
-// bankATM.cpp -- using the Queue interface
+/* TARGET
+    改进 程序清单 12-12 bank.cpp，包含两个队列，满足：
+    - 当第一队人数少于第二队时，客户将排在第一队，否则第二队
+    - 找出使平均等候时间为1分钟时，每小时到达的客户数为多少?
+*/
+// bankATM02.cpp -- using the Queue interface
 // compile with queue.cpp
 #include<iostream>
 #include<cstdlib> // for rand() and srand() and RAND_MAX = Max(rand())
-#include<ctime> // for time()
-#include<cmath>
+#include<ctime> // for time() and clock()
+#include<cmath> // for fabs()
 #include<string>
 #include "Queue.h"
 const int MIN_PER_HR = 60;
 
 bool newcustomer(double x); // is there a new customer?
 
-template<typename T>  // to deal with invalid input
+template<typename T> 
     void invalidInputHandle(T& a, std::string enterText, 
         std::string errorText);
 int main(){
@@ -44,7 +49,8 @@ int main(){
     invalidInputHandle<int>(qs, "Enter maximum size of queue: ",
         "qs must be a positive integer!");
 
-    Queue line(qs); // line queue holds up to qs people
+    Queue line1(qs); // line1 queue holds up to qs people
+    Queue line2(qs); // line2 queue holds up to qs people
 
     cout << "Enter the number of simulation hours: ";
     int hours; // hours of simulation
@@ -58,7 +64,7 @@ int main(){
 
     clock_t time_start = clock();
     clock_t time_end;
-    cout << "Simulation start!\n";
+    cout << "Simulation start! (With Two ATMs)\n";
     double perhour = 0.1; // average number of arrival per hour
     double step = perhour / 100;
     double min_per_cust; // average time between arrivals
@@ -71,30 +77,43 @@ int main(){
         long turnaways = 0; // turned away by full queue
         long customers = 0; // join the queue
         long served = 0; // served during the simulation
-        long sum_line = 0; // cumulative line length
-        int wait_time = 0; // time until autoteller is free
-        long line_wait = 0; // cumulative time in line
+        long sum_line = 0; // cumulative line1 length
+        int wait_time_line1 = 0; // time until autoteller #1 is free
+        int wait_time_line2 = 0; // time until autoteller #2 is free
+        
+        long line_wait = 0; // cumulative time in line1
 
         // running the simulation
         for (int cycle = 0; cycle < cyclelimit; ++cycle){
             if(newcustomer(min_per_cust)){
-                if(line.isfull())
+                if(line1.isfull() && line2.isfull())
                     turnaways++;
                 else{
                     customers++;
                     temp.set(cycle); // cycle = time of arrival
-                    line.enqueue(temp); // add newcomer to line
+                    if(line1.queuecount() <= line2.queuecount())
+                        line1.enqueue(temp); // add newcomer to line1
+                    else
+                        line2.enqueue(temp); // add newcomer to line2
                 }
             }
-            if(wait_time <= 0 && !line.isempty()){
-                line.dequeue(temp); // attend next customer
-                wait_time = temp.ptime(); // for wait_time minutes
+            if(wait_time_line1 <= 0 && !line1.isempty()){
+                line1.dequeue(temp); // attend next customer
+                wait_time_line1 = temp.ptime(); // for wait_time_line1 minutes
                 line_wait += cycle - temp.when();
                 served++;
             }
-            if(wait_time>0)
-                wait_time--;
-            sum_line += line.queuecount();
+            if(wait_time_line2 <= 0 && !line2.isempty()){
+                line2.dequeue(temp); // attend next customer
+                wait_time_line2 = temp.ptime(); // for wait_time_line1 minutes
+                line_wait += cycle - temp.when();
+                served++;
+            }
+            if(wait_time_line1>0)
+                wait_time_line1--;
+            if(wait_time_line2>0)
+                wait_time_line2--; 
+            sum_line += line1.queuecount() + line2.queuecount();
         }
         double avgwaittime = (double)line_wait / served;
         
