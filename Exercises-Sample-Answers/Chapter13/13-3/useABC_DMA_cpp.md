@@ -50,7 +50,7 @@ int main(){
         cout<<"Enter 1 for baseDMA or 2 for lacksDMA or 3 for hasDMA: ";
         while (cin>>kind &&  // what if we input '45678'?
             (kind != '1' && kind != '2' && kind != '3')){
-                // filter the input such as "123aasfs"
+            // filter the input such as "45678aaa123"
             while (cin.get() != '\n')
                 continue;
             cout<<"Enter 1 for baseDMA or 2 for lacksDMA or 3 for hasDMA: ";
